@@ -25,17 +25,15 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: replay_documentation/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
-        working-directory: replay_documentation
       - name: Build
         run: npm run build
-        working-directory: replay_documentation
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: replay_documentation/dist
+          path: dist
 
   deploy:
     environment:
