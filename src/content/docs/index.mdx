@@ -1,40 +1,72 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
-hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
-  actions:
-    - text: Example Guide
-      link: /guides/example/
-      icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+title: Rivals 2 Replay Format
+description: Reverse-engineered .rpl container, bitstream, and tooling — 35 replays validated.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## Next steps
+Offline decode of Rivals 2 `.rpl` replays — from container to 30 Hz snapshots to 147-bit inputs. Validated on 35 files (local + ranked), protocol `1.7.0.5`.
+
+## Start here
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+  <Card title="Instant header decode" icon="document">
+    `parse_tlv_header()` — stage + both players (char 0..17 + skin) from the first 88 bytes. No chunk parsing needed.
+  </Card>
+  <Card title="Live input capture" icon="rocket">
+    `frida/input_watch.js` → `src/capture_to_csv.py` — per-player button/axis CSV, validated against scripted presses.
+  </Card>
+  <Card title="File-write pipeline" icon="setting">
+    88B header + 24B index + payload + footer via `NtWriteFile` → `replay.tmp` (captured with `frida/dump_file_writes.js`).
+  </Card>
+  <Card title="Open question" icon="open-book">
+    Saved `.rpl` files show **zero** verbatim input blobs — replay UI likely reconstructs inputs from state. See [Inputs](/guides/inputs/).
+  </Card>
 </CardGrid>
+
+## File format
+
+<CardGrid>
+  <LinkCard title="Container (.rpl)" href="/guides/container/" description="Little-endian header + chunk records. Protocol IDs and sizes." />
+  <LinkCard title="Header TLV (88B)" href="/guides/header-tlv/" description="Stage + players at 0x10..0x58 — char/skin asset indexes." />
+  <LinkCard title="Stage / Skin Variants" href="/guides/stages/" description="Base vs skin-variant asset IDs (e.g., Underground Arena)." />
+</CardGrid>
+
+## Payload
+
+<CardGrid>
+  <LinkCard title="Bitstream Primitives" href="/guides/bitstream/" description="MSB-first encodings — 275k prims, 0 mismatches." />
+  <LinkCard title="Snapshot Framing" href="/guides/snapshots/" description="190-bit header, pool growth, delta walker." />
+  <LinkCard title="Input System (147-bit)" href="/guides/inputs/" description="Canonical blobs, button map, rings." />
+</CardGrid>
+
+## Pipeline & tooling
+
+<CardGrid>
+  <LinkCard title="File Write Pipeline" href="/guides/file-write/" description="How replay.tmp is assembled (NtWriteFile trace)." />
+  <LinkCard title="Tooling" href="/guides/tooling/" description="replay_info.py, extract_metadata, Frida scripts." />
+</CardGrid>
+
+## Reference
+
+<CardGrid>
+  <LinkCard title="Character IDs" href="/reference/characters/" description="0 Absa … 17 Zetterburn (14 reserved)." />
+  <LinkCard title="Stage IDs" href="/reference/stages/" description="Empirical stage asset table." />
+  <LinkCard title="Protocol IDs" href="/reference/protocols/" />
+  <LinkCard title="Key Addresses" href="/reference/addresses/" description="Bases 0x140000000 / 0x180000000, 1.7.0.5." />
+</CardGrid>
+
+## Quick start
+
+```bash
+# single file — instant
+python3 replay_info.py path/to/match.rpl
+
+# folder
+python3 replay_info.py /mnt/files/bitreader/Replays-1.7.0.5/
+
+# deep payload metadata (names, queue, names sanitized)
+python3 replay_info.py match.rpl --full
+```
+
+Characters 0..17 are **alphabetical internal slug order** ([Character IDs](/reference/characters/)). Slot 14 is reserved — likely the December 2026 character.

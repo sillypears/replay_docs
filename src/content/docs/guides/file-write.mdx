@@ -1,0 +1,16 @@
+---
+title: File Write Pipeline
+description: How the game persists replay files.
+---
+
+Captured via `frida/dump_file_writes.js` on `NtWriteFile`:
+
+1. `replay.tmp` opened in `%LOCALAPPDATA%/Rivals2/Saved/Replays/`
+2. `88B` — file header (proto, times, TLV)
+3. `24B` — chunk index entry `{off=0, cs, ce, len}`
+4. `~N KB` — chunk payload
+5. `4B` — footer patch
+
+The header builder is `sub_145ADC7D0` (`OnReplayChunkGenerated`) — asset-table resolver `sub_145633950` (28B entries, debug strings `CharList size %d CharID %d` at `0x148E61650` / `SkinList` at `0x148E61770`) produces the indexes that become the TLV.
+
+Use `frida/dump_file_writes.js` + `frida/meta_logger.js` to trace the mapping (force verbosity via `byte_14A455EB0`).

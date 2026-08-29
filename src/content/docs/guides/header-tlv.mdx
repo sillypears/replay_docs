@@ -1,0 +1,75 @@
+---
+title: Header TLV (88 bytes)
+description: File-level metadata at 0x10..0x58 — stage, players.
+---
+
+Validated on **35 files**: 33 full, 2 partial (online matches interleave extra cosmetic records). Decoder: `src/extract_metadata.py:parse_tlv_header()`.
+
+## Layout
+
+```text
+m = d[0x10:0x58]  (72B)
+
+[02][stage u32][00000000]              stage (see Stage IDs)
+[01][02][ff000000]                      constant template
+[00][02][ff000000]                      constant template
+[00][00][p1_char u32][p1_skin u32]      Player 1  (11B: slot, pad, char, skin)
+[01][p1_extra1][p1_extra2]
+[04][00000000]                          marker (5B; online: may carry 1B pads)
+[01][p2_char][p2_skin]                  Player 2
+[01][p2_extra1][p2_extra2]
+ffffffff                                terminator (absent in instant-quit)
+```
+
+- Player blocks found via regex `00 00 (char)(skin)` and `\x04\x00\x00\x00\x01(char)(skin)` — validated rather than fixed-offset walking (instant-quit recordings shift by one byte).
+- `stage` from first record `[02]` — the only stage-bearing record.
+- Skins `255` = "none" sentinel; real skins `0..300` (defaults: Lox 126, Cla 17, Gou 89, Kra 97, Lar 114, Absa 4, Zetterburn 232, Orcane 171, …).
+
+## Character IDs
+
+Alphabetical internal slug order, 0-based:
+
+| ID | Character |  | ID | Character |
+|----|-----------|--|----|-----------|
+| 0 | Absa | | 9 | Loxodont |
+| 1 | Clairen | | 10 | Maypul |
+| 2 | Etalus | | 11 | Olympia |
+| 3 | Fleet | | 12 | Orcane |
+| 4 | Forsburn | | 13 | Ranno |
+| 5 | Galvan | | 14 | *reserved* |
+| 6 | Gou | | 15 | Slade |
+| 7 | Kragg | | 16 | Wrastor |
+| 8 | La Reina | | 17 | Zetterburn |
+
+Slot 14 never appears — likely the **December 2026 character** (devs pre-register assets). All 17 other slots directly observed via `sub_145633950` resolver + file TLV pairs (roster run: 17 matches cycling P2 through every character).
+
+Resolver: `sub_145633950(table*, FPrimaryAssetId*)` — 28B-table, index returned. Debug strings at `0x148E61650` (`CharList size %d CharID %d`) / `0x148E61770` (`SkinList …`) in the writer `sub_145ADC7D0` (OnReplayChunkGenerated) confirm field semantics.
+
+## Stage IDs
+
+Empirical (from your 17-match roster run):
+
+| ID | Stage |
+|----|-------|
+| 2 | Metal Refinery (Armada Flagship) |
+| 7 | Fire Capital |
+| 11 | Godai Delta |
+| 12 | Hodojo |
+| 13 | Hyperborean Harbor |
+| 14 | Julesvale |
+| 17 | Merchant Port |
+| 18 | Aetherian Forest (Metal Graveyard) |
+| 21 | Rock Wall |
+| 42 | Tempest Peak |
+| 58 | Godai Delta (Underground Arena) |
+
+Skin variants register as **separate asset IDs** (same layout). Cycle every selectable stage/skin once with the resolver hook to extend the table.
+
+## API
+
+```python
+from extract_metadata import parse_tlv_header
+parse_tlv_header(open('match.rpl','rb').read())
+# → {'stage_id': 18, 'stage': 'Aetherian Forest (Metal Graveyard)',
+#    'players': [{'char': 'Zetterburn', 'skin_idx': 232}, ...]}
+```

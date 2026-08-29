@@ -6,19 +6,42 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'My Docs',
+			title: 'Rivals 2 Replay Docs',
+			description: 'Reverse-engineered .rpl format, payload bitstream, and tooling',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
 			sidebar: [
+				{ label: 'Overview', slug: 'index' },
 				{
-					label: 'Guides',
+					label: 'File Format',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
+						{ label: 'Container (.rpl)', slug: 'guides/container' },
+						{ label: 'Header TLV (88B)', slug: 'guides/header-tlv' },
+						{ label: 'Stage / Skin Variants', slug: 'guides/stages' },
+					],
+				},
+				{
+					label: 'Payload',
+					items: [
+						{ label: 'Bitstream Primitives', slug: 'guides/bitstream' },
+						{ label: 'Snapshot Framing', slug: 'guides/snapshots' },
+						{ label: 'Input System (147-bit)', slug: 'guides/inputs' },
+					],
+				},
+				{
+					label: 'Pipeline',
+					items: [
+						{ label: 'File Write (NtWriteFile)', slug: 'guides/file-write' },
+						{ label: 'Tooling', slug: 'guides/tooling' },
 					],
 				},
 				{
 					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
+					items: [
+						{ label: 'Character IDs', slug: 'reference/characters' },
+						{ label: 'Stage IDs', slug: 'reference/stages' },
+						{ label: 'Protocol IDs', slug: 'reference/protocols' },
+						{ label: 'Key Addresses', slug: 'reference/addresses' },
+					],
 				},
 			],
 		}),

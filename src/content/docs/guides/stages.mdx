@@ -1,0 +1,18 @@
+---
+title: Stage / Skin Variants
+description: Base stages vs skin-variant asset IDs.
+---
+
+`stages.json` (official API dump) lists base→`alt_name` mappings. In replays each **skin variant** has its own stage asset ID:
+
+| Base | Skin variant ID | Alt name |
+|------|-----------------|----------|
+| Aetherian Forest | 18 Metal Graveyard | 18 |
+| Metal Refinery | 2 Armada Flagship |  |
+| Godai Delta | 11 base, **58 Underground Arena** |  |
+| Fire Capital | 7 base (low-poly variant exists) |  |
+| Others | See `STAGE_IDS` in `extract_metadata.py` |  |
+
+`parse_tlv_header()` returns the raw `stage_id`; map to display name via `STAGE_IDS` + slash-skin suffix. Remaining unmapped stage IDs fill in by cycling stage select once with `frida/meta_logger.js` hook — each selected stage resolves via `c9 78 04` (stage type `c9780400`).
+
+For deep payload stage fields (`Stage_` pool strings), see `stages.json` resolver in `extract_metadata.py` (the payload path, redundant with header TLV since 2026-08-23).

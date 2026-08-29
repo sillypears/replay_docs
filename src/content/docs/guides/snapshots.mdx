@@ -1,0 +1,24 @@
+---
+title: Snapshot Framing
+description: What sits inside a chunk payload after the 190-bit header.
+---
+
+```
+[190-bit header: u64 proto, u64 session, u31 idx, u31 start_ms]
+[BIT=1][BIT=0]                       pool flags
+[string pool...]                     832 printable runs, grows during play
+[snapshot deltas ...]                bulk
+```
+
+DLL applier `sub_180092300(entry, reader, tick, flags, channel=13)` reads one packet:
+
+1. baseline flags
+2. entity presence bitmask (`state+0xB0`)
+3. per-entity ID remaps
+4. tick fields (varint + range ints)
+5. two passes of property reads (`sub_1800932D0` flag 1 then 0)
+6. event channels `[reg+0x110]`
+7. `more-entities` bit, idx (explicit or sequential), per-entity bitwriter seek
+8. timer/double sync section
+
+Property walk order lives in `sub_1800932D0` — still the open item for fully offline decode (`docs/STATUS.md §8`). Trace-assisted pipeline today: `frida/trace_bitreader_v3.js` + `src/parity_check.py` (275k prims validated).

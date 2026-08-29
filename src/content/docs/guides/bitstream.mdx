@@ -1,0 +1,19 @@
+---
+title: Bitstream Primitives
+description: MSB-first encodings, validated 275,192 primitives.
+---
+
+Reference: `src/parity_check.py`, `src/bitstream.py`.
+
+| Primitive | Encoding |
+|-----------|----------|
+| bit | 1 bit |
+| `read_int32(min,max)` | `n=bitlen(max-min)` bits, `val=min+raw` |
+| `uint32/64` | `bitlen(max)` bits |
+| `float_range` | if `range≥2147483600` or `prec<1.17e-38`: raw float32 else `steps=ceil(range/prec)`, `n=bitlen(steps)`, `step=range/mask` (n≤24) else `prec` |
+| signed float (mode 2) | sign bit first, then `float_range(0,max,prec)` |
+| compressed float | `[sign:1][exp:eb][mant:mb]` bias `2^(eb-1)-1` |
+| quaternion | largest-comp sign fix, 2-bit index, other 3 comps `round((v·√2/2+0.5)·mask)` |
+| pooled string | `bit(1)+pooled_index` |
+
+Validated by replaying the traced primitive sequence from raw chunk bytes — **0 mismatches, bits 0..946,519 of chunk 0** (`src/parity_check.py` → `merged_main.pkl`).

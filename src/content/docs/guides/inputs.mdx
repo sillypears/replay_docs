@@ -1,0 +1,27 @@
+---
+title: Input System (147-bit)
+description: Canonical per-player input format, validated by live capture.
+---
+
+Per-player **147-bit payload** (18-byte bitwriter, MSB-first). Buttons are single bits:
+
+| Bit | Button |
+|-----|--------|
+| 67 | Attack (light + strong share) |
+| 70 | Jump |
+| 73 | Parry |
+| 79 | Short jump |
+| 80 | Special |
+| 81 | Menu confirm |
+| 88 | Start |
+
+Fields: `33..39` grab (7b unit), `42..48+75` shield/dodge, `106..141` device-ID, `59..68` hi-res stick copy (`hi10 == 4*ax1`), `5..12`/`50..57` u8 axes (center 128).
+
+**Where inputs live:**
+
+- **Sim ring:** `snapnet_simulation_get_input(sim,idx)` → 56B bitwriter records `[sim+208]` stride 56 — always these canonical blobs.
+- **Replay playback:** rings stay empty — snapshot applier `sub_180092300` skips input sections (`flags & 2 == 0`, `rsp+0x18 == 0xd` observed). Inputs not read.
+- **Recording:** `sub_180081B10` expands each record; scene slot 15 wrapper `sub_145654F60 → [innerVT+120]` (real codec `sub_145655EE0`) writes `bit(1)+144b` if changed else `bit(0)`.
+- **File:** exhaustive searches across local matches where exact blobs were observed being written found **zero** verbatim occurrences in the saved `.rpl`. Likely delta-masked, transformed, or not serialized into saved replays at all (replay UI may reconstruct from state — see short-hop 4-frame precision argument in STATUS).
+
+**Working today:** `frida/input_watch.js` during any match → `src/capture_to_csv.py` → `inputs.csv` / `inputs_axes.csv`. Validated: attack×100, special×30, 8-button rosetta all matched.

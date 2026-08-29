@@ -1,0 +1,46 @@
+---
+title: Tooling
+description: Quick usage for every script.
+---
+
+## One-liner — instant header decode
+
+```bash
+python3 replay_info.py path/to/match.rpl
+python3 replay_info.py /mnt/files/bitreader/Replays-1.7.0.5/
+python3 replay_info.py match.rpl --full   # + deep payload names
+```
+
+## Full metadata (payload strings)
+
+```bash
+python3 src/extract_metadata.py file.rpl -p   # pretty box
+python3 src/extract_metadata.py dir/ -p       # folder
+```
+
+## Live input capture
+
+```bash
+# in-game, then convert
+frida -p <pid> -l frida/input_watch.js
+# ...play match...
+python3 src/capture_to_csv.py /mnt/files/outN.txt --csv inputs.csv
+# → inputs.csv + inputs_axes.csv
+```
+
+## File-write capture (header + chunk bytes as written)
+
+```bash
+frida -p <pid> -l frida/dump_file_writes.js
+# ...short match...
+# replay.tmp writes land in Saved/Replays/replay.tmp → renamed to *.rpl
+```
+
+## Tracing the snapshot path
+
+`frida/trace_bitreader_v3.js` + `src/parity_check.py` (275k prims, perfect parity).
+
+## Asset resolver taps
+
+- `frida/meta_logger.js` — character/skin/stage indexes via `sub_145633950`.
+- Force verbosity: patch `byte_14A455EB0` (`0x14A455EB0` RVA) to `6` to enable gated `CharList`/`SkinList` logs.

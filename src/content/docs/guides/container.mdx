@@ -1,0 +1,37 @@
+---
+title: Container (.rpl)
+description: Little-endian file header + chunk records.
+---
+
+All little-endian. Parser: `src/rpl_parser.py`.
+
+```text
+0x00  u64  protocol_id
+0x08  u32  start_ms
+0x0c  u32  end_ms
+0x10  72B  TLV metadata (stage, players — see Header TLV)
+0x58  chunk records until EOF:
+        u32 record_size    == payload_len + 24
+        u32 chunk_idx
+        u32 start_ms       (10 s windows)
+        u32 end_ms
+        u64 payload_len
+        payload[payload_len]
+```
+
+- `record_size` includes the 24-byte header itself.
+- Protocol IDs: `1.5.5.6=0x2a020cae4f2dcd1e`, `1.7.0.0=0xfc0447306b049a7f`, **`1.7.0.5=0x76f163bf59330e3a`** (SnapNetCore.dll byte-identical 1.7.0.0→1.7.0.5, md5 `bebd6b8da94bd3d91eacf87659c0c2db`).
+- ~185–235 KB payload per 10 s chunk.
+- No trailing bytes after last chunk (except OS-level flush footer `4B` via NtWriteFile).
+
+## How files are written
+
+Captured via `frida/dump_file_writes.js` on `NtWriteFile`:
+
+1. `OPEN replay.tmp`
+2. `NTWRITE 88B` — header (proto + times + TLV)
+3. `NTWRITE 24B` — chunk index entry `{off=0, cs, ce, len}`
+4. `NTWRITE ~N KB` — entire chunk payload in one shot
+5. `NTWRITE 4B` — footer patch (`0x01d63d` style cumulative size)
+
+Replays in your `Saved/Replays/*.rpl` are the renamed `replay.tmp` buffers.

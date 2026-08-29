@@ -1,0 +1,24 @@
+---
+title: Key Addresses
+description: Bases 0x140000000 (EXE) / 0x180000000 (DLL), 1.7.0.5.
+---
+
+| Symbol | RVA |
+|--------|-----|
+| `Rivals2-Win64-Shipping.exe` base | `0x140000000` |
+| `SnapNetCore.dll` base | `0x180000000` |
+| `snapnet_client_replay_play` | `0x180079E00` |
+| read chunk header `sub_180079F80` | +header 190b |
+| advance loop `sub_18007A0F0` |  |
+| packet applier `sub_180092300` | `channel=13` |
+| `sub_1800932D0` | per-entity delta walker |
+| `snapnet_bitreader_tell` | `0x180075500` |
+| `read_float_range` | `0x1800744F0` |
+| `write_int32` | `0x180076C80` |
+| client create `sub_14564AC50` | scene table 20 slots |
+| input sample `sub_14564E680` | input struct: N bools +48, M int32 axes +56 |
+| metadata builder `sub_145ADC7D0` | OnReplayChunkGenerated |
+| asset resolver `sub_145633950` | lookup table (28B entries) |
+| verbosity byte `0x14A455EB0` | patch to `6` to enable Char/Skin logs |
+
+Full map in `docs/STATUS.md §10`.
