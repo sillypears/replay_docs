@@ -4,6 +4,8 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://sillypears.github.io',
+	base: '/replay_docs',
 	integrations: [
 		starlight({
 			title: 'Rivals 2 Replay Docs',
